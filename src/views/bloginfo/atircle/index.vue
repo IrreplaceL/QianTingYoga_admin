@@ -185,10 +185,10 @@ const isDialogVisible = ref(false);
 const dialogTitle = ref("");
 const articleFormRef = ref();
 const currentArticle = reactive({
-  article_id: null,
+  article_id: "",
   title: "",
   content: "",
-  user_id: null,
+  user_id: "",
   type: "",
   image_url: "",
   created_at: "",
@@ -260,20 +260,56 @@ function openEditDialog(row) {
   isDialogVisible.value = true;
 }
 
+// 屬性名轉換
+function transformArticleData(article) {
+  return {
+    articleId: article.article_id,  // 前端的 article_id 转换为 articleId
+    title: article.title,
+    content: article.content,
+    createUserId: article.user_id,  // 前端的 user_id 转换为 createUserId
+    category: article.type,         // 前端的 type 转换为 category
+    image: article.image_url,       // 前端的 image_url 转换为 image
+    createTime: article.created_at, // 前端的 created_at 转换为 createTime
+    updateTime: article.updated_at  // 前端的 updated_at 转换为 updateTime
+  };
+}
 // 提交表单
 function submitForm() {
   articleFormRef.value.validate(valid => {
+    const transformedData = transformArticleData(currentArticle);
     if (valid) {
       if (currentArticle.article_id) {
         const index = articleList.value.findIndex(
           article => article.article_id === currentArticle.article_id
         );
+console.log("Request Data:", currentArticle);
         if (index !== -1) articleList.value[index] = { ...currentArticle };
-        ElMessage.success("编辑成功！");
+        axios
+          .post('http://localhost:1031/article/articleUpdata', transformedData)  // 假设后端接口为 /updateArticle
+          .then(response => {
+            ElMessage.success("编辑成功！");
+          })
+          .catch(error => {
+            ElMessage.error("编辑失败！");
+            console.error(error);
+          });
+
       } else {
         articleList.value.push({ ...currentArticle, article_id: Date.now() });
         pagination.total = articleList.value.length;
-        ElMessage.success("新增文章成功！");
+            // 向后端发送新增请求
+            axios
+          .post('http://localhost:1031/article/articleUpdata', transformedData)  // 假设后端接口为 /addArticle
+          .then(response => {
+            ElMessage.success("新增文章成功！");
+          })
+          .catch(error => {
+            // 请求失败时回滚更改
+            articleList.value.pop();  // 移除新增的文章
+            pagination.total = articleList.value.length;
+            ElMessage.error("新增文章失败！");
+            console.error(error);
+          });
       }
       isDialogVisible.value = false;
       resetForm();
