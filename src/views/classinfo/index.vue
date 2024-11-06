@@ -233,20 +233,51 @@ function openEditDialog(row) {
 }
 
 // 提交表单
+
 function submitForm() {
   courseFormRef.value.validate(valid => {
     if (valid) {
       if (currentCourse.id) {
+        // 编辑课程
         const index = courseList.value.findIndex(
           course => course.id === currentCourse.id
         );
         if (index !== -1) courseList.value[index] = { ...currentCourse };
-        ElMessage.success("编辑成功！");
+
+        // 发送编辑请求
+        axios
+          .post('http://localhost:1031/course/updateCourse', currentCourse)  // 编辑课程接口
+          .then(response => {
+            ElMessage.success("编辑成功！");
+          })
+          .catch(error => {
+            ElMessage.error("编辑失败！");
+            console.error(error);
+          });
       } else {
-        courseList.value.push({ ...currentCourse, id: Date.now() });
+        // 新增课程
+        const newCourse = { ...currentCourse, id: Date.now() };
+
+        // 先将新课程加入课程列表
+        courseList.value.push(newCourse);
         pagination.total = courseList.value.length;
-        ElMessage.success("新增课程成功！");
+
+        // 发送新增请求
+        axios
+          .post('http://localhost:1031/course/updataCourse', newCourse)  // 新增课程接口
+          .then(response => {
+            ElMessage.success("新增课程成功！");
+          })
+          .catch(error => {
+            // 如果新增请求失败，移除列表中的新课程，并提示错误
+            courseList.value.pop();  // 移除列表中新增的课程
+            pagination.total = courseList.value.length;  // 更新分页总数
+            ElMessage.error("新增课程失败！");
+            console.error(error);
+          });
       }
+
+      // 关闭对话框并重置表单
       isDialogVisible.value = false;
       resetForm();
     }
