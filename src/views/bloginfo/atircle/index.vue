@@ -333,12 +333,19 @@ function resetForm() {
 
 // 删除文章
 function deleteArticle(row) {
-  const index = articleList.value.indexOf(row);
-  if (index !== -1) {
-    articleList.value.splice(index, 1);
-    pagination.total = articleList.value.length;
-    ElMessage.success("删除成功！");
-  }
+  axios.post('http://localhost:1031/article/deleteArticle', row )
+    .then(response => {
+        const index = articleList.value.indexOf(row);
+        articleList.value.splice(index, 1);
+          pagination.total = articleList.value.length;
+          ElMessage.success("删除成功！");
+        // ElMessage.error("删除失败：" + response.data.message);
+    })
+    .catch(error => {
+      console.error("删除课程时出错：", error);
+      ElMessage.error("删除失败，请稍后重试。");
+    });
+
 }
 
 // 分页事件
