@@ -357,15 +357,26 @@ function submitForm() {
 
 // 删除客户
 function deleteUser(row) {
-  const index = userList.value.findIndex(user => user.user_id === row.user_id);
-  if (index !== -1) {
-    userList.value.splice(index, 1);
-    pagination.total = userList.value.length;
-    ElMessage.success("删除成功！");
-  }
-}
 
-// 分页事件
+   const userId = row.user_id;
+  // 发送 POST 请求删除数据
+  axios
+    .post('http://localhost:1031/user/deleteUser', { user_id: userId })  // 假设接口为 /delete
+    .then(response => {
+      // 如果删除成功，更新本地数据
+      const index = userList.value.findIndex(user => user.user_id === userId);
+      if (index !== -1) {
+        userList.value.splice(index, 1);
+        pagination.total = userList.value.length;
+        ElMessage.success("删除成功！");
+      }
+    })
+    .catch(error => {
+      ElMessage.error("删除失败！");
+      console.error("删除失败:", error);
+    });
+}
+ // 分页事件
 function onSizeChange(size) {
   pagination.pageSize = size;
 }
