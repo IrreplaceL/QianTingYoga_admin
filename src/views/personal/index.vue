@@ -8,7 +8,7 @@
         <el-col :span="8">
           <el-form-item label="头像">
             <el-image
-              :src="userInfo.avatar_url || defaultAvatarUrl"
+              :src="userInfo.avatar || defaultAvatarUrl"
               alt="个人头像"
               style="width: 100px; height: 100px"
             />
@@ -19,13 +19,13 @@
             <span>{{ userInfo.username }}</span>
           </el-form-item>
           <el-form-item label="手机号码">
-            <span>{{ userInfo.phone_number }}</span>
+            <span>{{ userInfo.phone }}</span>
           </el-form-item>
           <el-form-item label="性别">
             <span>{{ userInfo.gender === "M" ? "男" : "女" }}</span>
           </el-form-item>
           <el-form-item label="身份类型">
-            <span>{{ roleMap[userInfo.role] }}</span>
+            <span>{{ identityMap[userInfo.identity] }}</span>
           </el-form-item>
         </el-col>
       </el-row>
@@ -53,9 +53,9 @@
             placeholder="请输入用户名"
           />
         </el-form-item>
-        <el-form-item label="手机号码" prop="phone_number">
+        <el-form-item label="手机号码" prop="phone">
           <el-input
-            v-model="editUserInfo.phone_number"
+            v-model="editUserInfo.phone"
             placeholder="请输入手机号码"
           />
         </el-form-item>
@@ -80,7 +80,8 @@
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="头像" prop="avatar_url">
+        <el-form-item label="头像" >
+        <!-- <el-form-item label="头像" prop="avatar"> -->
           <el-upload
             action="/upload/avatar"
             :on-success="handleAvatarSuccess"
@@ -88,9 +89,9 @@
             :show-file-list="false"
           >
             <el-button>上传头像</el-button>
-            <div v-if="editUserInfo.avatar_url" style="margin-top: 10px">
+            <div v-if="editUserInfo.avatar" style="margin-top: 10px">
               <el-image
-                :src="editUserInfo.avatar_url"
+                :src="editUserInfo.avatar"
                 alt="个人头像"
                 style="width: 100px; height: 100px"
               />
@@ -112,28 +113,28 @@ import { ElMessage } from "element-plus";
 
 const defaultAvatarUrl = "http://example.com/default-avatar.jpg"; // 默认头像 URL
 const userInfo = reactive({
-  user_id: 1,
+  userId: 1,
   username: "user1",
-  phone_number: "13800138000",
+  phone: "13800138000",
   gender: "M",
-  avatar_url: "",
-  role: 0, // 0:管理员, 1:教师, 2:客户
+  avatar: "",
+  identity: 0, // 0:管理员, 1:教师, 2:客户
   password: "password123" // 密码字段
 });
 
-const roleMap = { 0: "管理员", 1: "教师", 2: "客户" };
+const identityMap = { 0: "管理员", 1: "教师", 2: "客户" };
 const editUserInfo = reactive({ ...userInfo });
 const isDialogVisible = ref(false);
 const userFormRef = ref();
 
 const rules = {
   username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-  phone_number: [
+  phone: [
     { required: true, message: "请输入手机号码", trigger: "blur" }
   ],
   gender: [{ required: true, message: "请选择性别", trigger: "change" }],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-  avatar_url: [{ required: true, message: "请上传头像", trigger: "blur" }]
+  avatar: [{ required: true, message: "请上传头像", trigger: "blur" }]
 };
 
 // 打开编辑对话框
@@ -155,7 +156,7 @@ function submitForm() {
 
 // 上传头像成功后的处理
 function handleAvatarSuccess(response) {
-  editUserInfo.avatar_url = response.url; // 假设服务器返回字段为url
+  editUserInfo.avatar = response.url; // 假设服务器返回字段为url
   ElMessage.success("头像上传成功！");
 }
 
