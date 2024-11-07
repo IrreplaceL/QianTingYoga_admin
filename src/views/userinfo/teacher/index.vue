@@ -41,28 +41,28 @@
         <el-table-column type="index" label="序号" width="55" />
         <el-table-column prop="user_id" label="教师ID" min-width="100" />
         <el-table-column prop="username" label="教师名" min-width="120" />
-        <el-table-column prop="phone_number" label="手机号码" min-width="120" />
+        <el-table-column prop="phone" label="手机号码" min-width="120" />
         <el-table-column prop="gender" label="性别" min-width="80">
           <template #default="{ row }">
             <span>{{ row.gender === "M" ? "男" : "女" }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="avatar_url" label="教师头像" min-width="120">
+        <el-table-column prop="avatar" label="教师头像" min-width="120">
           <template #default="{ row }">
             <el-image
-              :src="row.avatar_url"
+              :src="row.avatar"
               alt="教师头像"
               style="width: 50px; height: 50px"
             />
           </template>
         </el-table-column>
-        <el-table-column prop="role" label="身份类型" min-width="100">
+        <el-table-column prop="identity" label="身份类型" min-width="100">
           <template #default="{ row }">
-            <span>{{ roleMap[row.role] }}</span>
+            <span>{{ identityMap[row.identity] }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" min-width="160" />
-        <el-table-column prop="updated_at" label="更新时间" min-width="160" />
+        <el-table-column prop="create_time" label="创建时间" min-width="160" />
+        <el-table-column prop="update_time" label="更新时间" min-width="160" />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="openEditDialog(row)"
@@ -115,9 +115,9 @@
             show-password
           />
         </el-form-item>
-        <el-form-item label="手机号码" prop="phone_number">
+        <el-form-item label="手机号码" prop="phone">
           <el-input
-            v-model="currentUser.phone_number"
+            v-model="currentUser.phone"
             placeholder="请输入手机号码"
             clearable
           />
@@ -130,7 +130,8 @@
         </el-form-item>
 
         <!-- 上传教师头像 -->
-        <el-form-item label="教师头像" prop="avatar_url">
+        <el-form-item label="教师头像">
+        <!-- <el-form-item label="教师头像" prop="avatar"> -->
           <el-upload
             action="/upload/avatar"
             :on-success="handleAvatarSuccess"
@@ -138,9 +139,9 @@
             :show-file-list="false"
           >
             <el-button>点击上传</el-button>
-            <div v-if="currentUser.avatar_url" style="margin-top: 10px">
+            <div v-if="currentUser.avatar" style="margin-top: 10px">
               <el-image
-                :src="currentUser.avatar_url"
+                :src="currentUser.avatar"
                 alt="教师头像"
                 style="width: 100px; height: 100px"
               />
@@ -148,19 +149,19 @@
           </el-upload>
         </el-form-item>
 
-        <el-form-item label="身份类型" prop="role">
-          <el-input v-model="roleDisplay" :disabled="true" />
+        <el-form-item label="身份类型" prop="identity">
+          <el-input v-model="identityDisplay" :disabled="true" />
         </el-form-item>
-        <el-form-item label="创建时间" prop="created_at">
+        <el-form-item label="创建时间" prop="create_time">
           <el-date-picker
-            v-model="currentUser.created_at"
+            v-model="currentUser.create_time"
             type="datetime"
             placeholder="选择创建时间"
           />
         </el-form-item>
-        <el-form-item label="更新时间" prop="updated_at">
+        <el-form-item label="更新时间" prop="update_time">
           <el-date-picker
-            v-model="currentUser.updated_at"
+            v-model="currentUser.update_time"
             type="datetime"
             placeholder="选择更新时间"
           />
@@ -192,12 +193,12 @@ const fetchUserData = async () => {
     userList.value = response.data.data.map(user => ({
       user_id: user.userId,
       username: user.username,
-      phone_number: user.phone,
+      phone: user.phone,
       gender: user.gender,
       avatar: user.avatar,
-      created_at: user.createTime,
-      updated_at: user.updateTime,
-      role: user.identity
+      create_time: user.createTime,
+      update_time: user.updateTime,
+      identity: user.identity
     })); // 映射后端返回的数据
     console.log('Data fetched successfully:', userList.value);
   } catch (error) {
@@ -208,7 +209,7 @@ const fetchUserData = async () => {
 onMounted(fetchUserData);
 
 
-const roleMap= { 0: "管理员", 1: "教师", 2: "客户" };
+const identityMap= { 0: "管理员", 1: "教师", 2: "客户" };
 
 const isDialogVisible = ref(false);
 const dialogTitle = ref("");
@@ -217,35 +218,35 @@ const currentUser = reactive({
   user_id: null,
   username: "",
   password: "",
-  phone_number: "",
+  phone: "",
   gender: "M",
-  avatar_url: "",
-  role: 0,
-  created_at: "",
-  updated_at: ""
+  avatar: "this is picture",
+  identity: 1,
+  create_time: "",
+  update_time: ""
 });
 const rules = {
   username: [{ required: true, message: "请输入教师名", trigger: "blur" }],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-  phone_number: [
+  phone: [
     { required: true, message: "请输入手机号码", trigger: "blur" }
   ],
   gender: [{ required: true, message: "请选择性别", trigger: "change" }],
-  avatar_url: [{ required: true, message: "请上传教师头像", trigger: "blur" }],
-  role: [{ required: true, message: "请选择身份类型", trigger: "change" }],
-  created_at: [
+  avatar: [{ required: true, message: "请上传教师头像", trigger: "blur" }],
+  identity: [{ required: true, message: "请选择身份类型", trigger: "change" }],
+  create_time: [
     { required: true, message: "请选择创建时间", trigger: "change" }
   ],
-  updated_at: [{ required: true, message: "请选择更新时间", trigger: "change" }]
+  update_time: [{ required: true, message: "请选择更新时间", trigger: "change" }]
 };
 // 身份类型的显示文本
-const roleDisplay = computed(() => {
-  return currentUser.role === 1 ? "教师" : "教师";
+const identityDisplay = computed(() => {
+  return currentUser.identity === 1 ? "教师" : "教师";
 });
 
 // 头像上传成功后处理
 function handleAvatarSuccess(response) {
-  currentUser.avatar_url = response.url; // 假设服务器返回 URL 字段
+  currentUser.avatar = response.url; // 假设服务器返回 URL 字段
   ElMessage.success("头像上传成功！");
 }
 
@@ -260,12 +261,12 @@ const pagination = reactive({
 const filteredUserList = computed(() => {
   return userList.value.filter(
     user =>
-    user.role === 1 &&
+    user.identity === 1 &&
       (searchParams.username
         ? user.username.includes(searchParams.username)
         : true) &&
       (searchParams.phoneNumber
-        ? user.phone_number.includes(searchParams.phoneNumber)
+        ? user.phone.includes(searchParams.phoneNumber)
         : true)
   );
 });
@@ -289,12 +290,12 @@ function openAddUserDialog() {
     user_id: null,
     username: "",
     password: "",
-    phone_number: "",
+    phone: "",
     gender: "M",
-    avatar_url: "",
-    role: 2,
-    created_at: "",
-    updated_at: ""
+    avatar: "1111111111S",
+    identity: 1,
+    create_time: "",
+    update_time: ""
   });
   dialogTitle.value = "新增教师";
   isDialogVisible.value = true;
@@ -308,23 +309,38 @@ function openEditDialog(row) {
 }
 
 // 提交表单
+
+
 function submitForm() {
-  userFormRef.value.validate(valid => {
+  userFormRef.value.validate(async (valid) => {
     if (valid) {
-      if (currentUser.user_id) {
-        const index = userList.value.findIndex(
-          user => user.user_id === currentUser.user_id
-        );
-        if (index !== -1) {
-          Object.assign(userList.value[index], currentUser);
-          ElMessage.success("教师信息更新成功！");
+      try {
+        if (currentUser.user_id) {
+          // 更新用户
+          const index = userList.value.findIndex(
+            (user) => user.user_id === currentUser.user_id
+          );
+          if (index !== -1) {
+            // 发送更新请求到后端
+            // await axios.put(`/api/users/${currentUser.user_id}`, currentUser);
+            const response = await axios.post("http://localhost:1031/user/updataUser", currentUser);
+            Object.assign(userList.value[index], currentUser);
+            ElMessage.success("信息更新成功！");
+          }
+        } else {
+          // 新增用户
+          // currentUser.user_id = Date.now();
+          // 发送新增请求到后端
+          const response = await axios.post("http://localhost:1031/user/updataUser", currentUser);
+          // 使用后端返回的数据（如有需要）
+          userList.value.push({ ...response.data });
+          ElMessage.success("新增成功！");
         }
-      } else {
-        currentUser.user_id = Date.now();
-        userList.value.push({ ...currentUser });
-        ElMessage.success("教师新增成功！");
+        isDialogVisible.value = false;
+      } catch (error) {
+        ElMessage.error("提交失败，请重试！");
+        console.error("提交表单错误:", error);
       }
-      isDialogVisible.value = false;
     }
   });
 }
