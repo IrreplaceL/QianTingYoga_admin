@@ -297,12 +297,18 @@ function resetForm() {
 
 // 删除课程
 function deleteCourse(row) {
-  const index = courseList.value.indexOf(row);
-  if (index !== -1) {
-    courseList.value.splice(index, 1);
-    pagination.total = courseList.value.length;
-    ElMessage.success("删除成功！");
-  }
+  axios.post('http://localhost:1031/course/deleteCourse', row )
+    .then(response => {
+        const index = courseList.value.indexOf(row);
+          courseList.value.splice(index, 1);
+          pagination.total = courseList.value.length;
+          ElMessage.success("删除成功！");
+        // ElMessage.error("删除失败：" + response.data.message);
+    })
+    .catch(error => {
+      console.error("删除课程时出错：", error);
+      ElMessage.error("删除失败，请稍后重试。");
+    });
 }
 
 // 分页事件
