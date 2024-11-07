@@ -33,7 +33,7 @@
     <!-- 评论信息表格 -->
     <div class="table-container">
       <el-table
-        :data="paginatedCommentList"
+        :data="commentList"
         border
         row-key="comment_id"
         style="width: 100%"
@@ -41,8 +41,8 @@
         <el-table-column type="index" label="序号" width="55" />
         <el-table-column prop="comment_id" label="评论ID" min-width="100" />
         <el-table-column prop="article_id" label="文章ID" min-width="100" />
-        <el-table-column prop="user_id" label="用户ID" min-width="100" />
-        <el-table-column prop="image_url" label="文章配图URL" min-width="200" />
+        <el-table-column prop="comment_user_id" label="用户ID" min-width="100" />
+        <el-table-column prop="image" label="文章配图URL" min-width="200" />
         <el-table-column prop="content" label="评论内容" min-width="200" />
         <el-table-column prop="created_at" label="创建时间" min-width="160" />
         <el-table-column prop="updated_at" label="更新时间" min-width="160" />
@@ -93,16 +93,16 @@
             clearable
           />
         </el-form-item>
-        <el-form-item label="用户ID" prop="user_id">
+        <el-form-item label="用户ID" prop="comment_user_id">
           <el-input
-            v-model="currentComment.user_id"
+            v-model="currentComment.comment_user_id"
             placeholder="请输入用户ID"
             clearable
           />
         </el-form-item>
-        <el-form-item label="文章配图URL" prop="image_url">
+        <el-form-item label="文章配图URL" prop="image">
           <el-input
-            v-model="currentComment.image_url"
+            v-model="currentComment.image"
             placeholder="请输入文章配图URL"
             clearable
           />
@@ -142,29 +142,13 @@
 import { ref, reactive, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { Search, Plus } from "@element-plus/icons-vue";
+import axios from 'axios';
+import {  onMounted } from 'vue';
 
 const searchParams = reactive({ articleId: "", userId: "" });
 
 const commentList = ref([
-  {
-    comment_id: 1,
-    article_id: 101,
-    user_id: "user_1",
-    image_url: "http://example.com/image1.jpg",
-    content: "这是一条评论内容。",
-    created_at: "2024-01-01 10:00:00",
-    updated_at: "2024-01-01 10:00:00"
-  },
-  {
-    comment_id: 2,
-    article_id: 102,
-    user_id: "user_2",
-    image_url: "http://example.com/image2.jpg",
-    content: "这是一条评论内容。",
-    created_at: "2024-01-02 11:00:00",
-    updated_at: "2024-01-02 11:00:00"
-  }
-  // 更多评论数据
+ // 更多评论数据
 ]);
 
 const isDialogVisible = ref(false);
@@ -173,16 +157,16 @@ const commentFormRef = ref();
 const currentComment = reactive({
   comment_id: null,
   article_id: "",
-  user_id: "",
-  image_url: "",
+  comment_user_id: "",
+  image: "",
   content: "",
   created_at: "",
   updated_at: ""
 });
 const rules = {
   article_id: [{ required: true, message: "请输入文章ID", trigger: "blur" }],
-  user_id: [{ required: true, message: "请输入用户ID", trigger: "blur" }],
-  image_url: [
+  comment_user_id: [{ required: true, message: "请输入用户ID", trigger: "blur" }],
+  image: [
     { required: true, message: "请输入文章配图URL", trigger: "blur" }
   ],
   content: [{ required: true, message: "请输入评论内容", trigger: "blur" }],
@@ -199,6 +183,29 @@ const pagination = reactive({
   pageSize: 10
 });
 
+const fetchArticleData = async () => {
+  try {
+    // 发送请求到后端获取文章数据
+    const response = await axios.get('http://localhost:1031/comment/commentListInformation');
+
+    // 假设后端响应的数据是符合你给出的格式
+    commentList.value = response.data.data.map(item => ({
+        comment_id: item.commentId,
+        article_id: item.articleId,
+        comment_user_id: item.commentUserId,
+        content: item.content,
+        created_at: item.createTime,
+        updated_at: item.updateTime,
+        // 其他字段可以继续映射
+      }));
+    // console.log('Data fetched successfully:', paginatedCommentList.value);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+};
+
+onMounted(fetchArticleData);
+
 // 过滤并分页显示评论数据
 const filteredCommentList = computed(() => {
   return commentList.value.filter(
@@ -207,7 +214,7 @@ const filteredCommentList = computed(() => {
         ? comment.article_id.toString().includes(searchParams.articleId)
         : true) &&
       (searchParams.userId
-        ? comment.user_id.includes(searchParams.userId)
+        ? comment.comment_user_id.includes(searchParams.userId)
         : true)
   );
 });
@@ -230,8 +237,8 @@ function openAddCommentDialog() {
   Object.assign(currentComment, {
     comment_id: null,
     article_id: "",
-    user_id: "",
-    image_url: "",
+    comment_user_id: "",
+    image: "",
     content: "",
     created_at: "",
     updated_at: ""
@@ -256,12 +263,33 @@ function submitForm() {
           comment => comment.comment_id === currentComment.comment_id
         );
         if (index !== -1) commentList.value[index] = { ...currentComment };
-        ElMessage.success("编辑成功！");
+        axios
+          .post('http://localhost:1031/comment/updataComment', currentComment)  // 假设后端接口为 /updateArticle
+          .then(response => {
+            ElMessage.success("编辑成功！");
+          })
+          .catch(error => {
+            ElMessage.error("编辑失败！");
+            console.error(error);
+          });
+
+
       } else {
-        currentComment.comment_id = Date.now(); // 生成新的评论ID
         commentList.value.push({ ...currentComment });
         pagination.total = commentList.value.length;
-        ElMessage.success("新增评论成功！");
+        axios
+          .post('http://localhost:1031/comment/updataComment', currentComment)  // 假设后端接口为 /addArticle
+          .then(response => {
+            ElMessage.success("新增评论成功！");
+          })
+          .catch(error => {
+            // 请求失败时回滚更改
+            commentList.value.pop();  // 移除新增的文章
+            pagination.total = commentList.value.length;
+            ElMessage.error("新增评论失败！");
+            console.error(error);
+          });
+
       }
       isDialogVisible.value = false;
       resetForm();
@@ -274,8 +302,8 @@ function resetForm() {
   Object.assign(currentComment, {
     comment_id: null,
     article_id: "",
-    user_id: "",
-    image_url: "",
+    comment_user_id: "",
+    image: "",
     content: "",
     created_at: "",
     updated_at: ""
