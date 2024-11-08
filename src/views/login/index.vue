@@ -12,7 +12,7 @@ import { bg, avatar, illustration } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { ref, reactive, toRaw, onMounted, onBeforeUnmount } from "vue";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
-
+import axios from 'axios';
 import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
 import Lock from "@iconify-icons/ri/lock-fill";
@@ -33,30 +33,79 @@ dataThemeChange(overallStyle.value);
 const { title } = useNav();
 
 const ruleForm = reactive({
-  username: "admin",
-  password: "admin123"
+  username: "",
+  password: ""
 });
+
+// const onLogin = async (formEl: FormInstance | undefined) => {
+//   if (!formEl) return;
+
+//   await formEl.validate((valid, fields) => {
+//     if (valid) {
+//       loading.value = true;
+
+
+//       // 发送 POST 请求到后端
+//       axios
+//         .post('http://localhost:1031/user/userlogin', {
+//           username: ruleForm.username,
+//           password: ruleForm.password,
+//         })
+//         .then(async (response) => {
+//           if (response.status === 200) {
+//             return initRouter().then(() => {
+//               router.push(getTopMenu(true).path).then(() => {
+//                 message("登录成功", { type: "success" });
+//               });
+//             });
+//           } else {
+//             message("登录失败", { type: "error" });
+//           }
+//         })
+//         .catch((error) => {
+//           message("登录失败，请检查网络连接", { type: "error" });
+//         })
+//         .finally(() => {
+//           loading.value = false;
+//         });
+//     }
+//   });
+// };
 
 const onLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
+
   await formEl.validate((valid, fields) => {
     if (valid) {
       loading.value = true;
-      useUserStoreHook()
-        .loginByUsername({ username: ruleForm.username, password: "admin123" })
-        .then(res => {
-          if (res.success) {
-            // 获取后端路由
-            return initRouter().then(() => {
-              router.push(getTopMenu(true).path).then(() => {
-                message("登录成功", { type: "success" });
-              });
+
+      // 发送 POST 请求到后端
+      axios
+        .post('http://localhost:1031/user/userlogin', {
+          username: ruleForm.username,
+          password: ruleForm.password,
+        })
+        .then(async (response) => {
+          if (response.status === 200) {
+            console.log("登录成功，开始初始化路由");
+            await initRouter(); // 确保 initRouter 完成
+
+            const targetPath = getTopMenu(true).path;
+            console.log("准备跳转到路径：", targetPath);
+
+            router.push(targetPath).then(() => {
+              message("登录成功", { type: "success" });
             });
           } else {
             message("登录失败", { type: "error" });
           }
         })
-        .finally(() => (loading.value = false));
+        .catch((error) => {
+          message("登录失败，请检查网络连接", { type: "error" });
+        })
+        .finally(() => {
+          loading.value = false;
+        });
     }
   });
 };
@@ -101,57 +150,66 @@ onBeforeUnmount(() => {
             <h2 class="outline-none">{{ title }}</h2>
           </Motion>
 
-          <el-form
-            ref="ruleFormRef"
-            :model="ruleForm"
-            :rules="loginRules"
-            size="large"
-          >
-            <Motion :delay="100">
-              <el-form-item
-                :rules="[
-                  {
-                    required: true,
-                    message: '请输入账号',
-                    trigger: 'blur'
-                  }
-                ]"
-                prop="username"
-              >
-                <el-input
-                  v-model="ruleForm.username"
-                  clearable
-                  placeholder="账号"
-                  :prefix-icon="useRenderIcon(User)"
-                />
-              </el-form-item>
-            </Motion>
+<el-form
+  ref="ruleFormRef"
+  :model="ruleForm"
+  :rules="loginRules"
+  size="large"
+>
+  <Motion :delay="100">
+    <el-form-item
+      :rules="[
+        {
+          required: true,
+          message: '请输入账号',
+          trigger: 'blur'
+        }
+      ]"
+      prop="username"
+    >
+      <el-input
+        v-model="ruleForm.username"
+        clearable
+        placeholder="账号"
+        :prefix-icon="useRenderIcon(User)"
+      />
+    </el-form-item>
+  </Motion>
 
-            <Motion :delay="150">
-              <el-form-item prop="password">
-                <el-input
-                  v-model="ruleForm.password"
-                  clearable
-                  show-password
-                  placeholder="密码"
-                  :prefix-icon="useRenderIcon(Lock)"
-                />
-              </el-form-item>
-            </Motion>
+  <Motion :delay="150">
+    <el-form-item
+      :rules="[
+        {
+          required: true,
+          message: '请输入密码',
+          trigger: 'blur'
+        }
+      ]"
+      prop="password"
+    >
+      <el-input
+        v-model="ruleForm.password"
+        clearable
+        show-password
+        placeholder="密码"
+        :prefix-icon="useRenderIcon(Lock)"
+      />
+    </el-form-item>
+  </Motion>
 
-            <Motion :delay="250">
-              <el-button
-                class="w-full mt-4"
-                size="default"
-                type="primary"
-                :loading="loading"
-                @click="onLogin(ruleFormRef)"
-              >
-                登录
-              </el-button>
-            </Motion>
-          </el-form>
-        </div>
+  <Motion :delay="250">
+    <el-button
+      class="w-full mt-4"
+      size="default"
+      type="primary"
+      :loading="loading"
+      @click="onLogin(ruleFormRef)"
+    >
+      登录
+    </el-button>
+  </Motion>
+</el-form>
+           </div>
       </div>
     </div>
   </div>

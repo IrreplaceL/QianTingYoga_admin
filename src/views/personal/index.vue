@@ -110,16 +110,47 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from "vue";
 import { ElMessage } from "element-plus";
+import {  onMounted } from 'vue';
+import axios from 'axios';
 
 const defaultAvatarUrl = "http://example.com/default-avatar.jpg"; // 默认头像 URL
+// 定义响应式的 userInfo 对象
 const userInfo = reactive({
-  userId: 1,
-  username: "user1",
-  phone: "13800138000",
-  gender: "M",
-  avatar: "",
-  identity: 0, // 0:管理员, 1:教师, 2:客户
-  password: "password123" // 密码字段
+  userId: null,
+  username: '',
+  phone: '',
+  gender: '',
+  avatar: '',
+  identity: null, // 0:管理员, 1:教师, 2:客户
+  password: '' // 密码字段
+});
+
+// 获取用户信息的函数
+const fetchUserInfo = async (id) => {
+  try {
+    const response = await axios.get(`http://localhost:1031/userInformationById/${id}`);
+    if (response.data.code === 200) {
+      // 假设后端返回的数据结构符合前端的字段要求
+      const data = response.data.data;
+      userInfo.userId = data.userId;
+      userInfo.username = data.username;
+      userInfo.phone = data.phone;
+      userInfo.gender = data.gender;
+      userInfo.avatar = data.avatar;
+      userInfo.identity = data.identity;
+      userInfo.password = data.password; // 密码字段，通常不直接显示在 UI 中
+    } else {
+      console.error('Error:', response.data.msg);
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+  }
+};
+
+// 在组件挂载时调用获取用户信息的函数
+// 在组件挂载时调用获取用户信息的函数
+onMounted(() => {
+  fetchUserInfo(userInfo.userId); // 使用 userId 来调用后端接口获取数据
 });
 
 const identityMap = { 0: "管理员", 1: "教师", 2: "客户" };
